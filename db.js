@@ -19,7 +19,7 @@
 ));
 
 })( this,(function() {
-	return function(){
+	return function(){		
 		// Normalización
 		// En la siguiente línea, puede incluir prefijos de implementación que quiera probar.
 		window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -36,33 +36,71 @@
 
 		this.DB = window.indexedDB;
 
-		/*OPEN DATABASE*/
-		this.open = function( dbname , version , events){
+		
+		this.getDatabases = function(){
 
+		}		
+
+		/*OPEN DATABASE*/
+		this.open = function( dbname , version , stores ,events){
+
+			events = events == undefined || events == null ? {}: events;			
+
+			this.db = null;
 			var request = this.DB.open(dbname,version);
-			// ------------------------------------------------------------------
-			if( events.hasOwnProperty("error") ){
-				request.onerror = function(event){
+			// ------------------------------------------------------------------			
+			request.onerror = function(event){
+				if( events.hasOwnProperty("error") ){
 					events["error"](event);
-				}
+				}				
 			}
 			// ------------------------------------------------------------------
-			request.onsuccess = function(event){
-				this.db = request.result;
+			request.onsuccess = function(event){				
+				//--------------------------------
+				if( this.db == null  ){this.db =  event.target.result;}
 				// Emit database initialize
+				// -------------------------------
 				if( events.hasOwnProperty("success") ){
-					events["success"](event);
+					events["success"]( this.db );
 				}
 			}
 			// ------------------------------------------------------------------
-			request.onupgradeneeded = function(event){
-				if( events.hasOwnProperty("upgradeneeded") ){
-					events["upgradeneeded"](event);
+			request.onupgradeneeded = function(event){	
+
+				var __db = event.target.result;
+
+				if( stores != null && stores != undefined){
+					var keys = Object.keys(stores);
+					keys.forEach(function(index){						
+						__db.createObjectStore(index,stores[index]);
+					});
 				}
+
+				if( events.hasOwnProperty("upgradeneeded") ){
+					events["upgradeneeded"](__db);
+				}
+				
 			}
 			// ------------------------------------------------------------------
 		}
 		/*OPEN database*/
 		// ---
+		//------------------------------
+		//DELETE
+		this.delete = function( dbname , success){
+			var deleteRequest = this.DB.deleteDatabase(dbname);
+
+			deleteRequest.onerror = function(){
+				console.log("Error deleting database.");
+			}
+
+			deleteRequest.onsuccess = function(event){
+				if( typeof success == 'function' ){
+					success(event);
+				}
+			}
+
+		}
+		//---------------------------------
 	}
 }));

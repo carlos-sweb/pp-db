@@ -23,65 +23,124 @@
 	    	<a href="#/section/sql" class="pure-button">SQL</a>
     	<hr>
     	<br>
-		<form class="pure-form" onsubmit="createDB(event);event.preventDefault()" >
+		<form class="pure-form" onsubmit="createDB(event);event.preventDefault();" >
+			
 			<fieldset>
 			<legend>Create DB</legend>
 				<input type="text" name="dbname" id="dbname" placeholder="Name" required />
-				<input min="1" type="number" placeholder="version" value="1" required />
+				<input name="version" id="version" min="1" type="number" placeholder="version" value="1" required />
 				<button type="submit" class="pure-button pure-button-primary">ADD</button>
 			</fieldset>
+
+			<fieldset>
+			<legend>Stores</legend>
+				<input type="text" name="stores" placeholder="Name" required />
+				<!--<input name="version" id="version" min="1" type="number" placeholder="version" value="1" required />!-->
+				<a class="pure-button" style="background-color:#4CAF50;color:black;">Agregar</a>
+			</fieldset>
+
+			<fieldset>
+				<input type="text" name="stores" placeholder="Name" required />			
+				<!--<input type="text" name="dbname" id="dbname" placeholder="Name" required />
+				<input name="version" id="version" min="1" type="number" placeholder="version" value="1" required />-->
+				<a onclick="deleteStore(event)" class="pure-button" style="background-color:#D32F2F;color:white;">Eliminar</a>
+			</fieldset>
+
 		</form>
 
     </div>    
 </div>
 
-  
-
+ 
 <script src="db.js"></script>
 <script type="text/javascript">
+
+
+
+
+
+
 
 var databases = [];
 
 var _db = new ppDB();
 
-_db.open('pharmacy',1,{
+/*
+_db.open('pharmacy',1,{},{
 	error:function(event){
 		alert("Database error: " + event.target.errorCode);
 	},
-	success:function(event){
+	success:function( db ){
+		
 
-		console.log(event.target);
+
 
 		console.log("Estamos listos SUCCESS");
 
 	},
-	upgradeneeded:function(){
+	upgradeneeded:function(db){
 
+		db.createObjectStore("task");
 		console.log("Estamos listos upgradeneeded");
 
 	}
 });
+*/
 
-const promise = indexedDB.databases().then(( data )=>{
-  	
-  	var c = document.getElementById('databases');
-  	var string = "";
-  	data.forEach((d)=>{
-  		string += "<li><a href='#/algo'>"+d.name+"&nbsp;(&nbsp;v-"+d.version+"&nbsp;)</a></li>";
-  	});
+function showListDb( data){
 
-  	setTimeout(()=>{
-  		c.innerHTML = string;
-  	},800);
-  	
-});
+	var c = document.getElementById('databases');
+	var string = "";
+	data.forEach((d)=>{
+	string += "<li><a href='#/"+d.name+"'>"+d.name+"&nbsp;(&nbsp;v-"+d.version+"&nbsp;)</a>&nbsp;&nbsp;<button class='pure-button' onclick='deleteDB(\""+d.name+"\")' >Eliminar</button></li>";
+	});
+
+	setTimeout(()=>{
+	c.innerHTML = string;
+	},800);
+
+}
+
+indexedDB.databases().then(showListDb);
+//----------------------------------------------------------------------------
+function createDB( event ){		
+
+	const dbname = event.target.querySelector("input[id=dbname]").value;
+
+	const version = event.target.querySelector("input[id=version]").value;
+
+
+	var stores = Array.from(event.target.querySelectorAll("input[name=stores]")).map(function(elem){
+		const obj = new Object();
+		obj[elem.value] = {};
+		return obj;
+	});
 
 
 
+	_db.open(dbname,version,{
+		"task":{keyPath:"id",autoIncrement:true},
+		"customer":{keyPath:"id",autoIncrement:true}
+	},{
+		success:function(){			
+			indexedDB.databases().then(showListDb);
+		}
+	});
 
-function createDB( event ){
-	console.log(event.target);
 	event.target.reset();
+
+}
+//----------------------------------------------------------------------------
+
+function deleteDB( dbname ){
+	_db.delete(dbname, function(){
+		indexedDB.databases().then(showListDb);
+	});
+}
+
+
+function deleteStore(event){
+	event.target.parentElement.remove()	
 }
 
 
