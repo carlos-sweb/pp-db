@@ -147,8 +147,14 @@ var createDatabaseView = function( databases ){
 
 				new ppDB({
 					name : formData.get("database") ,
-					version : formData.get("version")
+					version : formData.get("version"),
+					success:function(){
+						console.log("Estamos listos");
+					}
 				})
+
+
+
 
 
 		});

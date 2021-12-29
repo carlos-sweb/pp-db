@@ -4,7 +4,7 @@
   "description": "Database manager",
   "main": "index.html",
   "scripts": {
-    "build": "npm i"
+    "build": "npm run css"
   },
   "repository": {
     "type": "git",

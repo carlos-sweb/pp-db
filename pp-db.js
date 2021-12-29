@@ -20,14 +20,18 @@
   window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: "readwrite"}; // This line should only be needed if it is needed to support the object's constants for older browsers
   window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
   // (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
-
-
+    // -------------------------------------------------------------------------
+    /**
+     *@databases
+     *@description -
+     *@type - Function
+     * */
     var databases = function( done ){
         this.DB.databases().then(function( databases ){
             done(databases);
         }.bind(this));
     }
-
+    // -------------------------------------------------------------------------
     var add = function( table , data , done){
           var db = 	this.request.result;
           var transaction = db.transaction(table, "readwrite");
@@ -39,7 +43,7 @@
               }.bind(this)
           });
     }
-
+    // -------------------------------------------------------------------------
     var getAll = function( table , done ){
         var db = this.request.result;
         var transaction = db.transaction(table, "readwrite");
@@ -95,6 +99,10 @@
                     opt.name ,
                     opt.version
                   );
+
+                  this.request.onsuccess = function(event){
+                     ppIs.isFunction( opt.success ) ? opt.success(event) : void(0);
+                  }.bind(this)
                   // -----------------------------------------------------------
                   this.request.onerror = error;
                   // -----------------------------------------------------------
