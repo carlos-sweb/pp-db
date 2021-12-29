@@ -3,117 +3,44 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
-
+	<link rel="stylesheet" href="node_modules/normalize.css/normalize.css">
+	<link rel="stylesheet" href="node_modules/flexboxgrid/dist/flexboxgrid.min.css">
+	<link rel="stylesheet" href="node_modules/picnic/picnic.min.css">
+	<link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="node_modules/@fontsource/ubuntu/400.css">
+	<link rel="stylesheet" href="node_modules/@fontsource/ubuntu/700.css">
+	<link rel="stylesheet" href="node_modules/@fontsource/ubuntu/latin.css">
+	<style>
+	*{font-family:"Ubuntu", sans-serif;}
+	.container{width:90%;max-width:960px;}
+	</style>
 	<title>pp-db</title>
 </head>
-<body>
+<body >
 
+<div style="overflow: hidden;height: 70px;">
 
-<main id="main" class="container"></main>
+<nav class="demo">
+  <a href="#" class="brand">
+    <span><i class="fa fa-database"></i> Power Panel / indexedDB </span>
+  </a>
 
+  <input id="bmenub" type="checkbox" class="show">
+  <label for="bmenub" class="burger pseudo button"><i class="fa fa-bars"></i></label>
 
+  <div class="menu">
+    <a href="https://github.com/carlos-sweb/pp-db" target="_blank" class="pseudo button icon-picture"><i class="fa fa-github-alt"></i>&nbsp;Github</a>
+    <a href="#" class="button icon-puzzle"><i class="fa fa-download"></i>&nbsp;Downlod</a>
+  </div>
+</nav>
+</div>
+<main id="main" style="width:90%;max-width:960px;margin:0px auto;">
+</main>
+
+<script src="node_modules/pp-is/pp-is.min.js" ></script>
+<script src="pp-db.js" ></script>
 <script type="text/javascript">
 
-(function(root){
-
-
-  
-  		// In the following line, you should include the prefixes of implementations you want to test.
-window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-// DON'T use "var indexedDB = ..." if you're not in a function.
-// Moreover, you may need references to some window.IDB* objects:
-window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: "readwrite"}; // This line should only be needed if it is needed to support the object's constants for older browsers
-window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-// (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
-
-
-
-
-
-
-
-// ==============================================================
-root.ppDB = function( options ){
-
-		this.DB = indexedDB
-		// ----------------------------------------------------------
-		this.request = indexedDB.open(options.name , options.version );
-
-		this.add = function( table , data , done){
-
-				 
-					var db = 	this.request.result;
-					var transaction = db.transaction(table, "readwrite");
-					var objectStore = transaction.objectStore(table);
-					data.forEach((item) => {
-							var objectStoreRequest = objectStore.add(item);	
-							objectStoreRequest.onsuccess = function(){
-									done(this , item )
-							}.bind(this)
-					});
-										
-				
-		}
-
-		this.getAll = function( table , done ){
-				var db = this.request.result;
-				var transaction = db.transaction(table, "readwrite");
-				var objectStore = transaction.objectStore(table);
-				
-				var request = objectStore.getAll()
-
-				request.onsuccess = function( event ){
-							done( request.result)
-				}
-				
-
-
-				
-
-		}	
-
-		// ----------------------------------------------------------
-		this.request.onerror = function( error ){
-				console.log("Error : ");
-				console.log( error );
-		}
-		// ----------------------------------------------------------
-		this.request.onupgradeneeded = function( event ){
-
-			var db = event.target.result;			
-			console.log( );
-			options.tables.forEach(( table )=>{					
-					
-					var objectStore = db.createObjectStore( table.table, { keyPath: "id", autoIncrement:true });
-
-					console.log(objectStore);
-					
-					/*
-					table.fields.forEach(( field )=>{
-							objectStore.createIndex(field.name,field.name,{unique:false});
-					});
-					*/
-					
-					objectStore.transaction.oncomplete = function(event) {
-
-							var tableObjectStore = db.transaction(table.table, "readwrite").objectStore(table.table);
-							table.data.forEach((data)=>{
-									tableObjectStore.add(data)
-							});
-
-					}
-
-			});
-			
-
-		}
-}
-// ==============================================================
-})(window)
 
 
 
@@ -128,12 +55,128 @@ var submit = function( event ){
 
 }
 
+
+var createDatabaseView = function( databases ){
+
+	var main = document.getElementById("main") , vtr = '';
+	vtr += `
+
+	<section class="flex five">
+		<div class="full fifth-1000" >&nbsp;</div>
+			<div class="full three-fifth-1000" >
+				<form name="createDB" id="createDB" >
+					<fieldset class="flex two">
+					<label><input autocomplete="off" capitalize="off" name="database" type="text" placeholder="database"></label>
+					<label><input autocomplete="off" capitalize="off" name="version" ctype="number" placeholder="version" min="1" max="10"></label>
+					</fieldset>
+					<div class="reverse">
+						<button>Create</button>
+					</div>
+				</form>
+			</div>
+		<div class="full fifth-1000" >&nbsp;</div>
+	</section>
+	<section class="flex five">
+		<div class="full fifth-1000" >&nbsp;</div>
+			<div class="full three-fifth-1000" >
+
+
+				<table class="full">
+					<thead><th>Name</th><th>version</th><th></th></thead>
+					<tbody>`
+
+					databases.forEach(function(_db){
+						vtr += `
+						<tr>
+							<td>${_db.name}</td>
+							<td>${_db.version}</td>
+							<td>
+								<button class='success'><i class="fa fa-database"></i></button>&nbsp;
+
+								<label for="modal_1" class="button error"><i class="fa fa-trash"></i></label>
+
+								<div class="modal">
+								  <input id="modal_1" type="checkbox" />
+								  <label for="modal_1" class="overlay"></label>
+								  <article>
+								    <header>
+								      <h3>Are you sure ? </h3>
+								      <label for="modal_1" class="close">&times;</label>
+								    </header>
+								    <section class="content">
+								      You are one step away from deleting the database ${_db.name}
+								    </section>
+								    <footer>
+								      <a class="button" href="#">Delete</a>
+								      <label for="modal_1" class="button dangerous">
+								        Cancel
+								      </label>
+								    </footer>
+								  </article>
+								</div>
+
+
+
+
+							</td>
+					  </tr>`;
+					});
+
+					vtr +=`
+					</tbody>
+				</table>
+			</div>
+		<div class="full fifth-1000" >&nbsp;</div>
+	</section>
+
+
+
+
+
+		`;
+		// -------------------------------------------------------------------------
+		main.innerHTML = vtr;
+		// -------------------------------------------------------------------------
+		var form = main.querySelector("form[name=createDB]");
+		// -------------------------------------------------------------------------
+		form.addEventListener("submit",function( event ){
+				event.preventDefault();
+				var formData = new FormData(event.target);
+				console.log( formData.get("database") );
+				console.log( formData.get("version") );
+
+				new ppDB({
+					name : formData.get("database") ,
+					version : formData.get("version")
+				})
+
+
+		});
+		// -------------------------------------------------------------------------
+}
+
 var createList = function( data ){
+
 
 		var body = document.getElementById("main") , vtr = '';
 		vtr += `
 
-			<form id="formAdd" name="form1">
+			<div class="full flex grow"  >
+				<div></div>
+				<form >
+					<fieldset class="flex two">
+					<label><input type="text" placeholder="database"></label>
+					<label><input type="number" placeholder="version" min="1" max="10"></label>
+					</fieldset>
+					<div class="reverse">
+						<button>Create</button>
+					</div>
+				</form>
+				<div></div>
+			</div>
+
+
+			<!--<form id="formAdd" name="form1">
 			<fieldset>
 					<label for="name">Name</label>
 					<input type="text" name="name" id="name">
@@ -142,32 +185,31 @@ var createList = function( data ){
 					<input class="button-primary" type="submit" value="Send">
 			</fieldset>
 			</form>
-			<form>
+			<form>-->
 
 
 
-			<table>
+			<!--<table>
   <thead>
     <tr>
       <th>Name</th>
-      <th>Number</th>      
+      <th>Number</th>
       <th></th>
     </tr>
   </thead>
   <tbody>
 
- 
+
 
 
 
 		`;
-		vtr += "<ul>";
 		data.forEach(( item)=>{
 				vtr +=  `<tr><td>${item.name} </td><td>${item.number}</td><td><button onclick="event.preventDefault()">Delete</button></td></li> `
 		});
-		vtr += `				
+		vtr += `
 		  </tbody>
-		</table>`;
+		</table>-->`;
 
 
 
@@ -191,12 +233,12 @@ var createList = function( data ){
 
 }
 
-
+/*
 var db = new ppDB({
 	name:"customer",
-	version : 1 , 
+	version : 1 ,
 	tables:[{
-		table:"contacts",		
+		table:"contacts",
 		fields:[{name : 'name'},{name : 'number'}],
 		data:[
 			{'name':'Carlos Illesca','number':'+56964573739'},
@@ -204,11 +246,10 @@ var db = new ppDB({
 		]
 
 	}]
-});
+});*/
 
 
 setTimeout( () => {
-
 		/*
 		db.add("contacts",[{
 			'name':'Pedro',
@@ -218,12 +259,10 @@ setTimeout( () => {
 		});
 		*/
 
-		db.getAll("contacts",createList);
-
+		//db.getAll("contacts",createList);
+		var db = new ppDB()
+		db.databases(createDatabaseView);
 },1000);
-
-
-
-</script>	
+</script>
 </body>
 </html>

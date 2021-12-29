@@ -1,0 +1,31 @@
+{
+  "name": "pp-db",
+  "version": "1.0.0",
+  "description": "Database manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlos-sweb/pp-db.git"
+  },
+  "keywords": [
+    "database",
+    "indexDB"
+  ],
+  "author": "Carlos Illesca",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/carlos-sweb/pp-db/issues"
+  },
+  "homepage": "https://github.com/carlos-sweb/pp-db#readme",
+  "dependencies": {
+    "@fontsource/ubuntu": "^4.5.0",
+    "flexboxgrid": "^6.3.1",
+    "font-awesome": "^4.7.0",
+    "normalize.css": "^8.0.1",
+    "picnic": "^6.5.5",
+    "pp-is": "^1.0.7"
+  }
+}
