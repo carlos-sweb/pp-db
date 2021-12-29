@@ -31,16 +31,20 @@
 		if(!window.indexedDB) {
 			window.alert("Su navegador no soporta una versión estable de indexedDB. Tal y como las características no serán validas");
 		}
-
-		this.db = null;
-
+		// =================================================================================
 		this.DB = window.indexedDB;
-
-		
-		this.getDatabases = function(){
-
-		}		
-
+		// =================================================================================
+		/**
+		 * @getDatabases
+		 * @type Function
+		 * @description Retorna todas las bases de datos
+		 **/
+		this.getDatabases = function( done ){
+			this.DB.databases().then(function(databases){
+				done(databases)
+			})			
+		}
+		// =================================================================================
 		/*OPEN DATABASE*/
 		this.open = function( dbname , version , stores ,events){
 

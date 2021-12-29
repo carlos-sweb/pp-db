@@ -1,208 +1,229 @@
 <!DOCTYPE html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
 
-
-  <title>Document</title>
+	<title>pp-db</title>
 </head>
 <body>
 
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand">pp-db.js</a>       
-  </div>
-</nav>
+<main id="main" class="container"></main>
 
 
-
-<div class="container pt-4">
-	<div class="row">
-		<div class="col-3">			
-				<h3>Databases</h3>
-				<ul class="list-group" id="databases"></ul>			
-		</div>
-		<div class="col" id="view" >				
-
-		</div>
-	</div>
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/pp-router.js@1.0.2/pp-router.js" ></script>
-<script src="db.js"></script>
 <script type="text/javascript">
- 
-var view =  document.getElementById("view");
 
-var _db = new ppDB();
-
-var databases = [];
+(function(root){
 
 
-var router = new ppRouter(    
-    {
-    "/db/:name(string)":{
-        controller:function(params){
-        	
-        	view.innerHTML = `
-        	<div class="row">
-        		<div class="col-4" >
-        			<label>Change DB</label>
-        			<select oncchange="" id="selectdb" class="form-control" disabled ></select>
-        		</div>
-        	</div>
-
-        	`;
-        	
-        	var selectdb = document.getElementById("selectdb");
+  
+  		// In the following line, you should include the prefixes of implementations you want to test.
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+// DON'T use "var indexedDB = ..." if you're not in a function.
+// Moreover, you may need references to some window.IDB* objects:
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: "readwrite"}; // This line should only be needed if it is needed to support the object's constants for older browsers
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+// (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
 
 
 
-			indexedDB.databases().then((list)=>{
-				var options = "";
-				//showListDb(list);
-				for( var i = 0; i < list.length;i++ ){
-					options += "<option "+(list[i].name == params.name) ? 'selected':''+">"+list[i].name+"</option>";
-					if(list[i].name == params.name){																	
-					}					
+
+
+
+
+// ==============================================================
+root.ppDB = function( options ){
+
+		this.DB = indexedDB
+		// ----------------------------------------------------------
+		this.request = indexedDB.open(options.name , options.version );
+
+		this.add = function( table , data , done){
+
+				 
+					var db = 	this.request.result;
+					var transaction = db.transaction(table, "readwrite");
+					var objectStore = transaction.objectStore(table);
+					data.forEach((item) => {
+							var objectStoreRequest = objectStore.add(item);	
+							objectStoreRequest.onsuccess = function(){
+									done(this , item )
+							}.bind(this)
+					});
+										
+				
+		}
+
+		this.getAll = function( table , done ){
+				var db = this.request.result;
+				var transaction = db.transaction(table, "readwrite");
+				var objectStore = transaction.objectStore(table);
+				
+				var request = objectStore.getAll()
+
+				request.onsuccess = function( event ){
+							done( request.result)
 				}
-				// disabled 
 				
 
-				selectdb.innerHTML = options
-				selectdb.disabled = false;
 
-			});           
-        }
-    },
-    "/":{
-    	controller:function(){
-			
-			view.innerHTML = `
-			<!---->
-			<form onsubmit="createDB(event);event.preventDefault()" >
-				<div class="row">
-					<div class="col-4">
-						<label for="dbname">DB Name</label>
-						<input type="text" class="form-control" name="dbname" id="dbname" >
-					</div>
-					<div class="col-4">
-						<label for="version">Version</label>
-						<input min="1" value="1" type="number" class="form-control" name="version" id="version" >
-					</div>
-					<div class="col-4">
-						<br>
-						<button type="submit" class="btn btn-primary">Create</button>
-					</div>
-				</div>	
-			</form>
-			<!----->`;
+				
 
-    	}
-    }
-    }
-);	
+		}	
 
-
-router.noFound = function(location){
-	console.log(location.hash);
-	console.log("Nofound");
-}
-
-router.start();
-
-
-
-/*
-_db.open('pharmacy',1,{},{
-	error:function(event){
-		alert("Database error: " + event.target.errorCode);
-	},
-	success:function( db ){
-		
-
-
-
-		console.log("Estamos listos SUCCESS");
-
-	},
-	upgradeneeded:function(db){
-
-		db.createObjectStore("task");
-		console.log("Estamos listos upgradeneeded");
-
-	}
-});
-*/
-
-function showListDb( data){
-
-	var c = document.getElementById('databases');
-	var string = "";
-	data.forEach((d)=>{
-	string += "<li class='list-group-item' ><a href='#/db/"+d.name+"'>"+d.name+"&nbsp;(&nbsp;v-"+d.version+"&nbsp;)</a>&nbsp;&nbsp;<button style='float:right;' class='btn btn-danger' onclick='deleteDB(\""+d.name+"\")' ><i class=\"fas fa-trash\"></i></button></li>";
-	});
-
-	setTimeout(()=>{
-	c.innerHTML = string;
-	},800);
-
-}
-
-indexedDB.databases().then(showListDb);
-//----------------------------------------------------------------------------
-function createDB( event ){		
-
-	const dbname = event.target.querySelector("input[id=dbname]").value;
-
-	const version = event.target.querySelector("input[id=version]").value;
-
-
-	var stores = Array.from(event.target.querySelectorAll("input[name=stores]")).map(function(elem){
-		const obj = new Object();
-		obj[elem.value] = {};
-		return obj;
-	});
-
-
-
-	_db.open(dbname,version,{
-		"task":{keyPath:"id",autoIncrement:true},
-		"customer":{keyPath:"id",autoIncrement:true}
-	},{
-		success:function(){			
-			indexedDB.databases().then(showListDb);
+		// ----------------------------------------------------------
+		this.request.onerror = function( error ){
+				console.log("Error : ");
+				console.log( error );
 		}
-	});
+		// ----------------------------------------------------------
+		this.request.onupgradeneeded = function( event ){
 
-	event.target.reset();
+			var db = event.target.result;			
+			console.log( );
+			options.tables.forEach(( table )=>{					
+					
+					var objectStore = db.createObjectStore( table.table, { keyPath: "id", autoIncrement:true });
+
+					console.log(objectStore);
+					
+					/*
+					table.fields.forEach(( field )=>{
+							objectStore.createIndex(field.name,field.name,{unique:false});
+					});
+					*/
+					
+					objectStore.transaction.oncomplete = function(event) {
+
+							var tableObjectStore = db.transaction(table.table, "readwrite").objectStore(table.table);
+							table.data.forEach((data)=>{
+									tableObjectStore.add(data)
+							});
+
+					}
+
+			});
+			
+
+		}
+}
+// ==============================================================
+})(window)
+
+
+
+var submit = function( event ){
+
+
+
+	var data = new FormData(event.target);
+
+	console.log( data);
+	console.log(event.target);
 
 }
-//----------------------------------------------------------------------------
 
-function deleteDB( dbname ){
-	_db.delete(dbname, function(){
-		indexedDB.databases().then(showListDb);
-	});
+var createList = function( data ){
+
+		var body = document.getElementById("main") , vtr = '';
+		vtr += `
+
+			<form id="formAdd" name="form1">
+			<fieldset>
+					<label for="name">Name</label>
+					<input type="text" name="name" id="name">
+					<label for="number">Number</label>
+					<input type="text" name="number" id="number">
+					<input class="button-primary" type="submit" value="Send">
+			</fieldset>
+			</form>
+			<form>
+
+
+
+			<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Number</th>      
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+
+ 
+
+
+
+		`;
+		vtr += "<ul>";
+		data.forEach(( item)=>{
+				vtr +=  `<tr><td>${item.name} </td><td>${item.number}</td><td><button onclick="event.preventDefault()">Delete</button></td></li> `
+		});
+		vtr += `				
+		  </tbody>
+		</table>`;
+
+
+
+
+		body.innerHTML = vtr;
+
+
+		document.querySelector("form[id=formAdd]").addEventListener('submit',function(event){
+				event.preventDefault();
+				var data = new FormData(event.target);
+				const insert = {'name':data.get('name'),'number':data.get('number')}
+
+				db.add('contacts',[insert],function(){
+					db.getAll("contacts",createList);
+				});
+
+
+
+		})
+
+
 }
 
 
-function deleteStore(event){
-	event.target.parentElement.remove()	
-}
+var db = new ppDB({
+	name:"customer",
+	version : 1 , 
+	tables:[{
+		table:"contacts",		
+		fields:[{name : 'name'},{name : 'number'}],
+		data:[
+			{'name':'Carlos Illesca','number':'+56964573739'},
+			{'name':'Daisy Montenegro','number':'+56964573739'}
+		]
+
+	}]
+});
 
 
-</script>
+setTimeout( () => {
 
+		/*
+		db.add("contacts",[{
+			'name':'Pedro',
+			'number':'0000'
+		}],function(){
+			console.log("toda la data agregada");
+		});
+		*/
+
+		db.getAll("contacts",createList);
+
+},1000);
+
+
+
+</script>	
 </body>
 </html>
